@@ -1,7 +1,7 @@
 """zeversolarlocal API"""
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Awaitable, Callable, Optional
 
 import httpx
 
@@ -38,21 +38,6 @@ def _parse_content(incoming: str) -> SolarData:
         return SolarData(_daily_energy, _current_power)
 
 
-class HttpxClient:
-    def __init__(self) -> None:
-        self.client: Optional[httpx.AsyncClient] = None
-
-    async def __aenter__(self):
-        self.client = httpx.AsyncClient()
-        return self.client
-
-    async def __aexit__(self, exc_type, exc, tb):
-        if self.client:
-            await self.client.aclose()
-        if exc_type:
-            raise ZeverError(exc)
-
-
 async def httpx_get_client(url: str, timeout=2) -> bytes:
     try:
         async with httpx.AsyncClient() as client:
@@ -71,7 +56,9 @@ def default_url(ipaddress: str):
     return f"http://{ipaddress}/home.cgi"
 
 
-async def solardata(url: str, client=None) -> SolarData:
+async def solardata(
+    url: str, client: Optional[Callable[[str], Awaitable[bytes]]] = None
+) -> SolarData:
     """Query the local zever solar inverter for new data.
 
     Raises:
