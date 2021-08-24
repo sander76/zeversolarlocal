@@ -8,7 +8,15 @@ description-file = "README.md"
 author = "Sander Teunissen"
 requires-python = ">=3.7"
 requires = ["httpx"]
+homepage = "https://github.com/sander76/zeversolarlocal"
+keywords = ["solar", "async", "energy"]
 
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
     [tool.flit.metadata.requires-extra]
     test = ["pytest", "pytest-asyncio", "pytest-mock"]
     dev = ["pylint", "nox", "pytest-cov", "coverage[toml]>=5.0.3", "pre-commit"]
