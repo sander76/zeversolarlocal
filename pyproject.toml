@@ -1,0 +1,14 @@
+[build-system]
+requires = ["flit_core >=2,<3"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "zeversolarlocal"
+description-file = "README.md"
+author = "Sander Teunissen"
+requires-python = ">=3.7"
+requires = ["httpx"]
+
+    [tool.flit.metadata.requires-extra]
+    test = ["pytest", "pytest-asyncio", "pytest-mock"]
+    dev = ["pylint", "nox", "pytest-cov", "coverage[toml]>=5.0.3", "pre-commit"]
