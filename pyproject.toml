@@ -8,8 +8,8 @@ description-file = "README.md"
 author = "Sander Teunissen"
 requires-python = ">=3.7"
 requires = ["httpx"]
-homepage = "https://github.com/sander76/zeversolarlocal"
-keywords = ["solar", "async", "energy"]
+home-page = "https://github.com/sander76/zeversolarlocal"
+keywords = "solar,async,energy"
 
 classifiers = [
     "License :: OSI Approved :: MIT License",
