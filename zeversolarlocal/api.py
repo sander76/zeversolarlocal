@@ -64,6 +64,13 @@ async def httpx_get_client(url: str, timeout=2) -> bytes:
     return data.content
 
 
+def default_url(ipaddress: str):
+    """Return the default url based on the provided ip address
+    Address only ie. 192.168.1.3"""
+
+    return f"http://{ipaddress}/home.cgi"
+
+
 async def solardata(url: str, client=None) -> SolarData:
     """Query the local zever solar inverter for new data.
 
@@ -73,7 +80,7 @@ async def solardata(url: str, client=None) -> SolarData:
     if client is None:
         client = httpx_get_client
 
-    data = await httpx_get_client(url)
+    data = await client(url)
 
     return _parse_content(_convert_to_string(data))
 

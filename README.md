@@ -22,7 +22,7 @@ loop = asyncio.get_event_loop()
 def get():
 
     address = "192.168.1.12"  # ip address of your zeversolar inverter.
-    url = f"http://{address}/home.cgi"
+    url = zeversolarlocal.default_url(address)
     
     solar_data = loop.run_until_complete(zeversolarlocal.solardata(url))
 

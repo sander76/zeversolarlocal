@@ -5,7 +5,9 @@ from zeversolarlocal.api import (
     ZeverError,
     _convert_to_string,
     _parse_content,
+    default_url,
     httpx_get_client,
+    solardata,
 )
 
 
@@ -42,3 +44,21 @@ async def test_connection_timeout():
 
     with pytest.raises(ZeverError):
         await httpx_get_client(ip_addr, 0.5)
+
+
+def test_default_url():
+    ip = "192.168.1.12"
+
+    result = default_url(ip)
+
+    assert result == "http://192.168.1.12/home.cgi"
+
+
+@pytest.mark.asyncio
+async def test_solardata():
+    async def a_get_client(url: str, *args, **kwargs):
+        return b"1 1 EAB9618C1399 AWWQBBWVVXDJWVXF M11 18625-797R+17829-719R 12:41 24/08/2021 1 1 ZS150060118C0109 1185 3.14 OK Error"
+
+    result = await solardata("fakeurl", client=a_get_client)
+
+    assert isinstance(result, SolarData)
