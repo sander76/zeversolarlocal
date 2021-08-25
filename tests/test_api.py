@@ -3,6 +3,7 @@ import pytest
 from zeversolarlocal.api import (
     SolarData,
     ZeverError,
+    ZeverTimeout,
     _convert_to_string,
     _parse_content,
     default_url,
@@ -42,7 +43,7 @@ def test_parse_fail_incorrect_incoming(incoming):
 async def test_connection_timeout():
     ip_addr = "http://192.168.188.29/home.html"
 
-    with pytest.raises(ZeverError):
+    with pytest.raises(ZeverTimeout):
         await httpx_get_client(ip_addr, 0.5)
 
 

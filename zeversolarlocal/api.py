@@ -43,7 +43,7 @@ async def httpx_get_client(url: str, timeout=2) -> bytes:
         async with httpx.AsyncClient() as client:
             data = await client.get(url, timeout=timeout)
     except httpx.TimeoutException:
-        raise ZeverError(
+        raise ZeverTimeout(
             "Connection to Zeversolar inverter timed out. %s", url
         ) from None
     return data.content
@@ -62,7 +62,10 @@ async def solardata(
     """Query the local zever solar inverter for new data.
 
     Raises:
-        A ZeverError when unable to fetch data.
+        ZeverError when data is incorrect.
+        ZeverTimeout when connecting to the inverter times out.
+            For example when the invertor is off as there is no sun to
+            power the invertor.
     """
     if client is None:
         client = httpx_get_client
@@ -74,3 +77,11 @@ async def solardata(
 
 class ZeverError(Exception):
     """Parsing problem"""
+
+
+class ZeverTimeout(ZeverError):
+    """The inverter is powered by its own solar energy.
+
+    No sun means no power and the inverter is off.
+    When queried while off, this error will be raised.
+    """
