@@ -1,6 +1,6 @@
 """zeversolarlocal"""
 
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
-from .api import ZeverError, default_url, solardata  # noqa
+from zeversolarlocal.api import ZeverError, ZeverTimeout, default_url, solardata  # noqa
