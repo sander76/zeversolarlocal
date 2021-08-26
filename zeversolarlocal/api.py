@@ -1,10 +1,11 @@
 """zeversolarlocal API"""
-
-from abc import ABC
+import logging
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 import httpx
 
+_LOGGER = logging.getLogger(__name__)
 DAILY_ENERGY_IDX = 12
 CURRENT_POWER_INDEX = 11
 INVERTER_ID = 10
@@ -34,6 +35,7 @@ def _parse_content(incoming: bytes) -> SolarData:
         _daily_energy = float(data[DAILY_ENERGY_IDX])
         _current_power = int(data[CURRENT_POWER_INDEX])
     except (ValueError, IndexError) as err:
+        _LOGGER.error("Unable to parse incoming data %s", incoming)
         raise ZeverError(err) from None
     else:
         return SolarData(_daily_energy, _current_power)
@@ -44,15 +46,17 @@ def _parse_zever_id(incoming: bytes) -> str:
     try:
         return _convert_to_string(data[10])
     except (ValueError, IndexError) as err:
+        _LOGGER.error("Unable to parse incoming data %s", incoming)
         raise ZeverError(err) from None
 
 
 class ClientAdapter(ABC):
     """http client base adapter."""
 
+    @abstractmethod
     async def get(self, url, timeout=2) -> bytes:
         """Return the url response data."""
-        raise NotImplementedError
+        ...
 
 
 class HttpxClient(ClientAdapter):
