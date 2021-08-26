@@ -1,12 +1,13 @@
 """zeversolarlocal API"""
 
+from abc import ABC
 from dataclasses import dataclass
-from typing import Awaitable, Callable, Optional
 
 import httpx
 
 DAILY_ENERGY_IDX = 12
 CURRENT_POWER_INDEX = 11
+INVERTER_ID = 10
 
 
 @dataclass
@@ -19,7 +20,7 @@ def _convert_to_string(data: bytes) -> str:
     return data.decode(encoding="utf-8")
 
 
-def _parse_content(incoming: str) -> SolarData:
+def _parse_content(incoming: bytes) -> SolarData:
     """Parse incoming data from the inverter.
 
     Incoming data is a string in form of:
@@ -38,27 +39,44 @@ def _parse_content(incoming: str) -> SolarData:
         return SolarData(_daily_energy, _current_power)
 
 
-async def httpx_get_client(url: str, timeout=2) -> bytes:
+def _parse_zever_id(incoming: bytes) -> str:
+    data = incoming.split()
     try:
-        async with httpx.AsyncClient() as client:
-            data = await client.get(url, timeout=timeout)
-    except httpx.TimeoutException:
-        raise ZeverTimeout(
-            "Connection to Zeversolar inverter timed out. %s", url
-        ) from None
-    return data.content
+        return _convert_to_string(data[10])
+    except (ValueError, IndexError) as err:
+        raise ZeverError(err) from None
 
 
-def default_url(ipaddress: str):
+class ClientAdapter(ABC):
+    """http client base adapter."""
+
+    async def get(self, url, timeout=2) -> bytes:
+        """Return the url response data."""
+        raise NotImplementedError
+
+
+class HttpxClient(ClientAdapter):
+    """Httpx client adapter"""
+
+    async def get(self, url, timeout=2) -> bytes:
+        try:
+            async with httpx.AsyncClient() as client:
+                data = await client.get(url, timeout=timeout)
+        except httpx.TimeoutException:
+            raise ZeverTimeout(
+                f"Connection to Zeversolar inverter timed out. {url}"
+            ) from None
+        return data.content
+
+
+def default_url(ip_address: str):
     """Return the default url based on the provided ip address
     Address only ie. 192.168.1.3"""
 
-    return f"http://{ipaddress}/home.cgi"
+    return f"http://{ip_address}/home.cgi"
 
 
-async def solardata(
-    url: str, client: Optional[Callable[[str], Awaitable[bytes]]] = None
-) -> SolarData:
+async def solardata(url: str, client: ClientAdapter = None) -> SolarData:
     """Query the local zever solar inverter for new data.
 
     Raises:
@@ -68,11 +86,20 @@ async def solardata(
             power the invertor.
     """
     if client is None:
-        client = httpx_get_client
+        client = HttpxClient()
 
-    data = await client(url)
+    data = await client.get(url)
 
-    return _parse_content(_convert_to_string(data))
+    return _parse_content(data)
+
+
+async def inverter_id(url: str, client: ClientAdapter = None) -> str:
+    if client is None:
+        client = HttpxClient()
+
+    data = await client.get(url)
+
+    return _parse_zever_id(data)
 
 
 class ZeverError(Exception):
