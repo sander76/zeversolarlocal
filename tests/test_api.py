@@ -9,6 +9,7 @@ from zeversolarlocal.api import (
     _convert_to_string,
     _parse_content,
     _parse_zever_id,
+    client_factory,
     default_url,
     inverter_id,
     solardata,
@@ -95,3 +96,15 @@ async def test_zever_id_endpoint(dummyclientadapter: DummyTestClient):
     result = await inverter_id("fakeurl", client=dummyclientadapter)
 
     assert result == "ZS150060118C0109"
+
+
+def test_client_factory_default():
+    client = client_factory(None)
+
+    assert isinstance(client, HttpxClient)
+
+
+def test_client_factory_custom(dummyclientadapter):
+    client = client_factory(dummyclientadapter)
+
+    assert client == dummyclientadapter

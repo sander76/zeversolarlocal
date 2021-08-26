@@ -2,6 +2,7 @@
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Optional
 
 import httpx
 
@@ -80,6 +81,13 @@ def default_url(ip_address: str):
     return f"http://{ip_address}/home.cgi"
 
 
+def client_factory(client: Optional[ClientAdapter]) -> ClientAdapter:
+    if client is None:
+        return HttpxClient()
+    else:
+        return client
+
+
 async def solardata(url: str, client: ClientAdapter = None) -> SolarData:
     """Query the local zever solar inverter for new data.
 
@@ -89,8 +97,7 @@ async def solardata(url: str, client: ClientAdapter = None) -> SolarData:
             For example when the invertor is off as there is no sun to
             power the invertor.
     """
-    if client is None:
-        client = HttpxClient()
+    client = client_factory(client)
 
     data = await client.get(url)
 
@@ -98,8 +105,7 @@ async def solardata(url: str, client: ClientAdapter = None) -> SolarData:
 
 
 async def inverter_id(url: str, client: ClientAdapter = None) -> str:
-    if client is None:
-        client = HttpxClient()
+    client = client_factory(client)
 
     data = await client.get(url)
 
