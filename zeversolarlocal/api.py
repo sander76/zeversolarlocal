@@ -82,13 +82,13 @@ def default_url(ip_address: str):
 
 
 def client_factory(client: Optional[ClientAdapter]) -> ClientAdapter:
+    """Return a ClientAdapter instance."""
     if client is None:
         return HttpxClient()
-    else:
-        return client
+    return client
 
 
-async def solardata(url: str, client: ClientAdapter = None) -> SolarData:
+async def solardata(url: str, client: ClientAdapter = None, timeout=2) -> SolarData:
     """Query the local zever solar inverter for new data.
 
     Raises:
@@ -99,21 +99,21 @@ async def solardata(url: str, client: ClientAdapter = None) -> SolarData:
     """
     client = client_factory(client)
 
-    data = await client.get(url)
+    data = await client.get(url, timeout=timeout)
 
     return _parse_content(data)
 
 
-async def inverter_id(url: str, client: ClientAdapter = None) -> str:
+async def inverter_id(url: str, client: ClientAdapter = None, timeout=2) -> str:
     client = client_factory(client)
 
-    data = await client.get(url)
+    data = await client.get(url, timeout=timeout)
 
     return _parse_zever_id(data)
 
 
 class ZeverError(Exception):
-    """Parsing problem"""
+    """General Zever problem"""
 
 
 class ZeverTimeout(ZeverError):
