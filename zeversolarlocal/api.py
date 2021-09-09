@@ -103,6 +103,7 @@ async def solardata(
     client = client_factory(client)
 
     data = await client.get(url, timeout=timeout)
+    _LOGGER.debug("incoming: %s", data)
 
     return _parse_content(data)
 
