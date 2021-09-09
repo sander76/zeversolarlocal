@@ -15,7 +15,7 @@ This means that some generated errors can mean different things depending on cir
 If the inverter cannot be reached a `ZeverTimeout` is raised. Which could mean:
 
 1. The ip-address of the inverter is wrong.
-2. The inverter is switched off (no solar power). But can be considered expected behaviour.
+2. The inverter is switched off (no solar power). But can be considered expected behavior.
 
 If returning data cannot be parsed properly a `ZeverError` is raised. Which could mean:
 
@@ -50,3 +50,9 @@ def get():
 from the commandline use:
 
 `python -m zeversolarlocal 192.168.1.12`
+
+# Changelog
+
+## 1.0.0
+
+- First release
