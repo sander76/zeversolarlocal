@@ -38,7 +38,6 @@ def _parse_content(incoming: bytes) -> SolarData:
         _daily_energy = float(data[DAILY_ENERGY_IDX])
         _current_power = int(data[CURRENT_POWER_INDEX])
     except (ValueError, IndexError) as err:
-        _LOGGER.error("Unable to parse incoming data %s", incoming)
         raise ZeverError(err) from err
     else:
         return SolarData(_daily_energy, _current_power)
@@ -47,9 +46,8 @@ def _parse_content(incoming: bytes) -> SolarData:
 def _parse_zever_id(incoming: bytes) -> str:
     data = incoming.split()
     try:
-        return _convert_to_string(data[10])
+        return _convert_to_string(data[INVERTER_ID])
     except (ValueError, IndexError) as err:
-        _LOGGER.error("Unable to parse incoming data %s", incoming)
         raise ZeverError(err) from None
 
 
