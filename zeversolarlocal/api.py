@@ -48,7 +48,7 @@ def _parse_zever_id(incoming: bytes) -> str:
     try:
         return _convert_to_string(data[INVERTER_ID])
     except (ValueError, IndexError) as err:
-        raise ZeverError(err) from None
+        raise ZeverError(err) from err
 
 
 class ClientAdapter(ABC):
@@ -57,7 +57,6 @@ class ClientAdapter(ABC):
     @abstractmethod
     async def get(self, url: str, timeout: int = 2) -> bytes:
         """Return the url response data."""
-        ...
 
 
 class HttpxClient(ClientAdapter):
