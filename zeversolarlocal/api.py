@@ -14,6 +14,8 @@ INVERTER_ID = 10
 
 @dataclass
 class SolarData:
+    """Solar data returned from the inverter API."""
+
     daily_energy: float  # kiloWatthour
     current_power: int  # Watt
 
@@ -37,7 +39,7 @@ def _parse_content(incoming: bytes) -> SolarData:
         _current_power = int(data[CURRENT_POWER_INDEX])
     except (ValueError, IndexError) as err:
         _LOGGER.error("Unable to parse incoming data %s", incoming)
-        raise ZeverError(err) from None
+        raise ZeverError(err) from err
     else:
         return SolarData(_daily_energy, _current_power)
 
@@ -55,7 +57,7 @@ class ClientAdapter(ABC):
     """http client base adapter."""
 
     @abstractmethod
-    async def get(self, url, timeout=2) -> bytes:
+    async def get(self, url: str, timeout: int = 2) -> bytes:
         """Return the url response data."""
         ...
 
@@ -63,7 +65,8 @@ class ClientAdapter(ABC):
 class HttpxClient(ClientAdapter):
     """Httpx client adapter"""
 
-    async def get(self, url, timeout=2) -> bytes:
+    async def get(self, url: str, timeout: int = 2) -> bytes:
+        """Return a client request."""
         try:
             async with httpx.AsyncClient() as client:
                 data = await client.get(url, timeout=timeout)
@@ -74,7 +77,7 @@ class HttpxClient(ClientAdapter):
         return data.content
 
 
-def default_url(ip_address: str):
+def default_url(ip_address: str) -> str:
     """Return the default url based on the provided ip address
     Address only ie. 192.168.1.3"""
 
@@ -88,14 +91,17 @@ def client_factory(client: Optional[ClientAdapter]) -> ClientAdapter:
     return client
 
 
-async def solardata(url: str, client: ClientAdapter = None, timeout=2) -> SolarData:
+async def solardata(
+    url: str, client: Optional[ClientAdapter] = None, timeout: int = 2
+) -> SolarData:
     """Query the local zever solar inverter for new data.
-
+    Returns:
+        SolarData. Dataclass containing solar data.
     Raises:
         ZeverError when data is incorrect.
         ZeverTimeout when connecting to the inverter times out.
-            For example when the invertor is off as there is no sun to
-            power the invertor.
+            For example when the inverter is off as there is no sun to
+            power the inverter.
     """
     client = client_factory(client)
 
@@ -104,7 +110,20 @@ async def solardata(url: str, client: ClientAdapter = None, timeout=2) -> SolarD
     return _parse_content(data)
 
 
-async def inverter_id(url: str, client: ClientAdapter = None, timeout=2) -> str:
+async def inverter_id(
+    url: str, client: Optional[ClientAdapter] = None, timeout: int = 2
+) -> str:
+    """Query the local zever solar inverter for the id of the inverter.
+
+    Returns:
+        String of the zever inverter id.
+
+    Raises:
+        ZeverError when data is incorrect.
+        ZeverTimeout when connecting to the inverter times out.
+            For example when the inverter is off as there is no sun to
+            power the inverter.
+    """
     client = client_factory(client)
 
     data = await client.get(url, timeout=timeout)
