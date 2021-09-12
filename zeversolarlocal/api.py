@@ -24,6 +24,22 @@ def _convert_to_string(data: bytes) -> str:
     return data.decode(encoding="utf-8")
 
 
+def fix(data: bytes) -> bytes:
+    """Return correct floating point representation.
+
+    All incoming daily energy is incoming as floating point rounded off by
+    two decimals. However, there is a bug:
+
+    10.05 gets reported as 10.5. Which is wrong.
+    10.5 is reported is 10.50 which is correct.
+    """
+    if (
+        data[-2] == 46
+    ):  # checks for char(46) meaning the "." character as dec separator.
+        return data[0:-1] + b"0" + data[-1:]
+    return data
+
+
 def _parse_content(incoming: bytes) -> SolarData:
     """Parse incoming data from the inverter.
 
@@ -35,7 +51,7 @@ def _parse_content(incoming: bytes) -> SolarData:
 
     data = incoming.split()
     try:
-        _daily_energy = float(data[DAILY_ENERGY_IDX])
+        _daily_energy = float(fix(data[DAILY_ENERGY_IDX]))
         _current_power = int(data[CURRENT_POWER_INDEX])
     except (ValueError, IndexError) as err:
         raise ZeverError(err) from err

@@ -11,14 +11,10 @@ from zeversolarlocal.api import (
     _parse_zever_id,
     client_factory,
     default_url,
+    fix,
     inverter_id,
     solardata,
 )
-
-
-@pytest.fixture
-def incoming():
-    return b"1 1 EAB9618C1399 AWWQBBWVVXDJWVXF M11 18625-797R+17829-719R 12:41 24/08/2021 1 1 ZS150060118C0109 1185 3.14 OK Error"
 
 
 class DummyTestClient(ClientAdapter):
@@ -45,11 +41,28 @@ def test_default_url():
     assert result == "http://192.168.1.12/home.cgi"
 
 
-def test_parse_incoming_success(incoming: bytes):
+@pytest.mark.parametrize(
+    "incoming,expected",
+    [
+        (
+            b"1 1 EAB9618C1399 AWWQBBWVVXDJWVXF M11 18625-797R+17829-719R 12:41 24/08/2021 1 1 ZS150060118C0109 1185 3.14 OK Error",
+            SolarData(3.14, 1185),
+        ),
+        (
+            b"1 1 EAB9618C1399 AWWQBBWVVXDJWVXF M11 18625-797R+17829-719R 12:41 24/08/2021 1 1 ZS150060118C0109 1185 3.5 OK Error",
+            SolarData(3.05, 1185),
+        ),
+        (
+            b"1 1 EAB9618C1399 AWWQBBWVVXDJWVXF M11 18625-797R+17829-719R 12:41 24/08/2021 1 1 ZS150060118C0109 1185 3.50 OK Error",
+            SolarData(3.50, 1185),
+        ),
+    ],
+)
+def test_parse_incoming_success(incoming, expected):
 
     result = _parse_content(incoming)
 
-    assert result == SolarData(3.14, 1185)
+    assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -74,10 +87,19 @@ async def test_httpx_timeout():
         await httpx_adapter.get(fake_url, timeout=0.5)
 
 
-def test_parse_zever_id_success(incoming):
-    result = _parse_zever_id(incoming)
+def test_parse_zever_id_success():
+    result = _parse_zever_id(
+        b"1 1 EAB9618C1399 AWWQBBWVVXDJWVXF M11 18625-797R+17829-719R 12:41 24/08/2021 1 1 ZS150060118C0109 1185 3.14 OK Error"
+    )
 
     assert result == "ZS150060118C0109"
+
+
+def test_parse_zever_id_fail():
+    with pytest.raises(ZeverError):
+        _parse_zever_id(
+            b"1 1 EAB9618C1399 AWWQBBWVVXDJWVXF M11 18625-797R+17829-719R 12:41 24/08/2021 1"
+        )
 
 
 @pytest.mark.asyncio
@@ -108,3 +130,13 @@ def test_client_factory_custom(dummyclientadapter):
     client = client_factory(dummyclientadapter)
 
     assert client == dummyclientadapter
+
+
+@pytest.mark.parametrize(
+    "incoming,expected",
+    [(b"10.5", b"10.05"), (b"10.05", b"10.05"), (b"0.01", b"0.01"), (b"0.1", b"0.01")],
+)
+def test_fix(incoming, expected):
+
+    result = fix(incoming)
+    assert result == expected
