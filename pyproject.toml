@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "flit_core.buildapi"
-requires = ["flit_core >=2,<3"]
+requires = ["flit_core >=2,<4"]
 
 [tool.flit.metadata]
 author = "Sander Teunissen"
